@@ -15,12 +15,6 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
         self.algorithm = algorithm
 
     def fit(self, X, y, sample_weight=None):
-        """
-        :param X:
-        :param y:
-        :param sample_weight:
-        :return:
-        """
         if self.algorithm not in ('SAMME', 'SAMME.R'):
             raise ValueError("algorithm %s is not supported" % self.algorithm)
 
@@ -39,17 +33,12 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
         sample_weight /= sample_weight.sum()
         if np.any(sample_weight < 0):
             raise ValueError("sample_weight cannot contain negative weights")
-
-        # Check parameters
+            
         self._validate_estimator()
-
-        # Clear any previous fit results
         self.estimators_ = []
         self.estimator_weights_ = np.zeros(self.n_estimators, dtype=np.float64) 
         self.estimator_errors_ = np.ones(self.n_estimators, dtype=np.float64)
 
-        # Initializion of the random number instance that will be used to
-        # generate a seed at each iteration
         random_state = check_random_state(self.random_state)
         
         for iboost in range(self.n_estimators):
