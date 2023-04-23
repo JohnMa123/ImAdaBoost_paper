@@ -1,4 +1,4 @@
-# Author：majinwei
+# Author：JohnMa
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.base import is_regressor
@@ -36,7 +36,7 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
                                    y_numeric=is_regressor(self))
 
         sample_weight = _check_sample_weight(sample_weight, X, np.float64)
-        sample_weight /= sample_weight.sum()  # 归一化 1/n
+        sample_weight /= sample_weight.sum()
         if np.any(sample_weight < 0):
             raise ValueError("sample_weight cannot contain negative weights")
 
@@ -45,14 +45,13 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
 
         # Clear any previous fit results
         self.estimators_ = []
-        self.estimator_weights_ = np.zeros(self.n_estimators, dtype=np.float64)  # 储存作为每个基分类器的权重
-        self.estimator_errors_ = np.ones(self.n_estimators, dtype=np.float64)  ##储存作为每个基分类器的error
+        self.estimator_weights_ = np.zeros(self.n_estimators, dtype=np.float64) 
+        self.estimator_errors_ = np.ones(self.n_estimators, dtype=np.float64)
 
         # Initializion of the random number instance that will be used to
         # generate a seed at each iteration
         random_state = check_random_state(self.random_state)
-
-        """开始迭代"""
+        
         for iboost in range(self.n_estimators):
             """Boosting step"""
             sample_weight, estimator_weight, estimator_error = self._boost_imada(
@@ -132,7 +131,6 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
                 np.log(n_classes - 1.))
 
         if not iboost == self.n_estimators - 1:
-            # Only boost positive weights
             incorrect = np.array(list(map(lambda x: 1 if x==True else -1,incorrect)))
             sample_weight *= np.exp(estimator_weight * incorrect *
                                     (sample_weight > 0)*(self._beta(y, y_predict,iboost,self.num)))
@@ -169,8 +167,7 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
             criteria = ((sample_weight > 0) | (estimator_weight < 0))
             sample_weight *= np.exp(estimator_weight * criteria * self._beta(y, y_predict,iboost,self.num))
         return sample_weight, 1., estimator_error
-
-    #  新定义的自适应偏度调整函数
+    
     def _beta(self, y, y_hat,iboost,num):
         res = []
         x1 = np.sum((y != y_hat))
