@@ -17,8 +17,6 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
     def fit(self, X, y, sample_weight=None):
         if self.algorithm not in ('SAMME', 'SAMME.R'):
             raise ValueError("algorithm %s is not supported" % self.algorithm)
-
-        # Check parameters
         if self.learning_rate <= 0:
             raise ValueError("learning_rate must be greater than zero")
 
@@ -28,12 +26,11 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
                                    allow_nd=True,
                                    dtype=None,
                                    y_numeric=is_regressor(self))
-
         sample_weight = _check_sample_weight(sample_weight, X, np.float64)
         sample_weight /= sample_weight.sum()
         if np.any(sample_weight < 0):
             raise ValueError("sample_weight cannot contain negative weights")
-            
+     
         self._validate_estimator()
         self.estimators_ = []
         self.estimator_weights_ = np.zeros(self.n_estimators, dtype=np.float64) 
@@ -42,7 +39,6 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
         random_state = check_random_state(self.random_state)
         
         for iboost in range(self.n_estimators):
-            """Boosting step"""
             sample_weight, estimator_weight, estimator_error = self._boost_imada(
                 iboost,
                 X, y,
@@ -52,14 +48,12 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
             if (estimator_error is None or estimator_error >0.5):
                 continue
 
-            """ Early termination """
             if sample_weight is None:
                 break
 
             self.estimator_weights_[iboost] = estimator_weight
             self.estimator_errors_[iboost] = estimator_error
 
-            """Stop if error is zero"""
             if estimator_error == 0:
                 break
 
@@ -69,9 +63,7 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
                 break
 
             if iboost < self.n_estimators - 1:
-                # Normalize
                 sample_weight /= sample_weight_sum
-
         return self
 
     def _boost_imada(self, iboost, X, y, sample_weight, random_state):
@@ -79,8 +71,7 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
             return self._boost_real_imada(iboost, X, y, sample_weight, random_state)
 
         else:
-            return self._boost_discrete_imada(iboost, X, y, sample_weight,
-                                        random_state)
+            return self._boost_discrete_imada(iboost, X, y, sample_weight, random_state)
 
     def _boost_discrete_imada(self, iboost, X, y, sample_weight, random_state):
         estimator = self._make_estimator(random_state=random_state)
@@ -93,20 +84,16 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
             self.classes_ = getattr(estimator, 'classes_', None)
             self.n_classes_ = len(self.classes_)
 
-        # Instances incorrectly classified
         incorrect = y_predict != y
 
-        # Error fraction
         estimator_error = np.mean(
             np.average(incorrect, weights=sample_weight, axis=0))
 
-        # Stop if classification is perfect
         if estimator_error <= 0:
             return sample_weight, 1., 0.
 
         n_classes = self.n_classes_
 
-        # Stop if the error is at least as bad as random guessing
         if estimator_error >= 1. - (1. / n_classes):
             self.estimators_.pop(-1)
             if len(self.estimators_) == 0:
