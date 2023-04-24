@@ -97,7 +97,7 @@ class ImAdaBoostClassifier(AdaBoostClassifier):
         if estimator_error >= 1. - (1. / n_classes):
             self.estimators_.pop(-1)
             if len(self.estimators_) == 0:
-                raise ValueError('BaseClassifier in AdaBoostClassifier '
+                raise ValueError('BaseClassifier in ImAdaBoostClassifier '
                                  'ensemble is worse than random, ensemble '
                                  'can not be fit.')
             return None, None, None
